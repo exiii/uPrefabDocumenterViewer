@@ -1,0 +1,2 @@
+Assets/Plugins/x86/sqlite3.dll filter=lfs diff=lfs merge=lfs -text
+Assets/Plugins/x86_64/sqlite3.dll filter=lfs diff=lfs merge=lfs -text
