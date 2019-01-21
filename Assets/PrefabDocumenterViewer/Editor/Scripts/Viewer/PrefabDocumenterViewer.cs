@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Runtime.Remoting;
 using UnityEngine;
 using UnityEditor;
 
@@ -9,10 +10,11 @@ namespace PrefabDocumenter.Unity
 {
     public class PrefabDocumenterViewer : EditorWindow
     {
-        private const string k_NameSearchBoxLabel = "FileName";
+        private Object m_DocumentDatabaseObject;
+        private SqliteDatabase m_DocumentDatabase;
+
         private string m_NameSearchBoxText;
 
-        private const string k_GuidSearchBoxLabel = "GUID";
         private string m_GuidSearchBoxText;
 
         private Dictionary<GUID, string> m_GuidAndPathPair;
@@ -20,7 +22,7 @@ namespace PrefabDocumenter.Unity
 
         private Vector2 m_SearchResultViewPos = Vector2.zero;
 
-        [MenuItem("Window/PrefabDocumenterViewer")]
+        [MenuItem(ViewerWindowLabel.MENU_ITEM_ATTR)]
         private static void OpenWindow()
         {
             var window = GetWindow<PrefabDocumenterViewer>();
@@ -32,8 +34,26 @@ namespace PrefabDocumenter.Unity
         {
             using (new EditorGUILayout.VerticalScope())
             {
-                m_NameSearchBoxText = EditorGUILayout.TextField(k_NameSearchBoxLabel, m_NameSearchBoxText);
-                m_GuidSearchBoxText = EditorGUILayout.TextField(k_GuidSearchBoxLabel, m_GuidSearchBoxText);
+                m_DocumentDatabaseObject = EditorGUILayout.ObjectField(m_DocumentDatabaseObject, typeof(Object), false);
+
+                if (m_DocumentDatabaseObject == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    m_DocumentDatabase = new SqliteDatabase(m_DocumentDatabaseObject.name);
+                }
+                catch
+                {
+                    Debug.LogWarning("正しい形式のデータベースを読み込んでください");
+                    m_DocumentDatabaseObject = null;
+                    return;
+                }
+
+                m_NameSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.NAME_SEARCH_BOX, m_NameSearchBoxText);
+                m_GuidSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.GUID_SEARCH_BOX, m_GuidSearchBoxText);
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -52,13 +72,19 @@ namespace PrefabDocumenter.Unity
 
                     m_SearchResultViewPos = EditorGUILayout.BeginScrollView(m_SearchResultViewPos, GUI.skin.box);
                     {
+                        // [TODO]
+                        EditorGUI.BeginChangeCheck();
                         m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected, m_GuidAndPathPair.Select(pair => pair.Value + ": " + pair.Key).ToArray(), 1, "PreferencesKeysElement");
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
+                        }
                     }
                     EditorGUILayout.EndScrollView();
 
                     using (new EditorGUILayout.VerticalScope())
                     {
-                        
+                            
                     }
                 }
             }
