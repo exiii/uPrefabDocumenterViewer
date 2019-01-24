@@ -13,4 +13,3 @@ namespace PrefabDocumenter.Unity
         public const string DESCRIPTION = "description";
     }
 }
-
