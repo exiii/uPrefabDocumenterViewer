@@ -6,6 +6,9 @@ namespace PrefabDocumenter.Unity
 {
 	public class SqlDbDao : MonoBehaviour 
 	{
-		
+		private void Start()
+		{
+			
+		}
 	}
 }
