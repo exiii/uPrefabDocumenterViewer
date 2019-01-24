@@ -9,10 +9,10 @@ namespace PrefabDocumenter.Unity
         public string Guid { get; private set; }
         public string FileName { get; private set; }
         public string FilePath { get; private set; }
-        public int IndentLevel { get; private set; }
+        public string IndentLevel { get; private set; }
         public string Description { get; private set; }
 
-        public DocumentVo(string Guid, string FileName, string FilePath, int IndentLevel, string Description)
+        public DocumentVo(string Guid, string FileName, string FilePath, string IndentLevel, string Description)
         {
             this.Guid = Guid;
             this.FileName = FileName;

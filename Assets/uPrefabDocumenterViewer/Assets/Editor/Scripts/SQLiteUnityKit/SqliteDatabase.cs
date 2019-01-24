@@ -87,49 +87,17 @@ public class SqliteDatabase
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SqliteDatabase"/> class.
 	/// </summary>
-	/// <param name='dbName'> 
-	/// Data Base name. (the file needs exist in the streamingAssets folder)
+	/// <param name='RelativePathDb'> 
+	/// Data Base Relative Path. (the file needs exist in the streamingAssets folder)
 	/// </param>
-	public SqliteDatabase (string dbName)
+	public SqliteDatabase (string RelativePathDb)
 	{
-		
-		pathDB = System.IO.Path.Combine (Application.persistentDataPath, dbName);
-		//original path
-		string sourcePath = System.IO.Path.Combine (Application.streamingAssetsPath, dbName);
-		
-		//if DB does not exist in persistent data folder (folder "Documents" on iOS) or source DB is newer then copy it
-		if (!System.IO.File.Exists (pathDB) || (System.IO.File.GetLastWriteTimeUtc(sourcePath) > System.IO.File.GetLastWriteTimeUtc(pathDB))) {
-			
-			if (sourcePath.Contains ("://")) {
-				// Android	
-				WWW www = new WWW (sourcePath);
-				// Wait for download to complete - not pretty at all but easy hack for now 
-				// and it would not take long since the data is on the local device.
-				while (!www.isDone) {;}
-				
-				if (String.IsNullOrEmpty(www.error)) { 					
-					System.IO.File.WriteAllBytes(pathDB, www.bytes);
-				} else {
-					CanExQuery = false;										
-				}	
-				
-			} else {
-				// Mac, Windows, Iphone
+		pathDB = RelativePathDb;
 			 
-				//validate the existens of the DB in the original folder (folder "streamingAssets")
-				if (System.IO.File.Exists (sourcePath)) {
-						
-					//copy file - alle systems except Android
-					System.IO.File.Copy (sourcePath, pathDB, true);
-												
-				} else {
-					CanExQuery = false;
-					Debug.Log ("ERROR: the file DB named " + dbName + " doesn't exist in the StreamingAssets Folder, please copy it there.");
-				}	
-				
-			}			
-			
-		}
+		if (!System.IO.File.Exists (pathDB)) {	
+			CanExQuery = false;
+			Debug.Log ("ERROR: not found the file DB " + pathDB);
+		} 
 	}
 	
 	private void Open ()
