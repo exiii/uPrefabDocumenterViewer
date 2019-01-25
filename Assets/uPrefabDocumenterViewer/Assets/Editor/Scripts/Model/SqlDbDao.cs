@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PrefabDocumenter.Unity
 {
-	public class SqlDbDao
+	public class SqlDbDao : IDocumentDao<DbDocumentVo>
 	{
 		private SqliteDatabase m_SqlDb;
 		
@@ -14,46 +15,33 @@ namespace PrefabDocumenter.Unity
 		{
 			try
 			{
-				try
-				{
-					m_SqlDb = new SqliteDatabase(DbPath);
+				m_SqlDb = new SqliteDatabase(DbPath);
 
-				}
-				catch
-				{
-					throw new Exception("Dbが存在しません。");
-				}
 			}
-			catch 
+			catch
 			{
-				return;
+				throw new Exception("Dbが存在しません。");
 			}
 		}
 
-		public void Insert()
+		public IEnumerable<DbDocumentVo> GetAll()
 		{
-			
-		}
-
-		public List<DocumentVo> GetAll()
-		{
-			var dataTable = m_SqlDb.ExecuteQuery(DocumentSQLQuery.GET_ALL);
+			var dataTable = m_SqlDb.ExecuteQuery(DocumentSQLQuery.GetAll);
 
 			try
 			{
 				return dataTable.Rows.Select(data =>
-					new DocumentVo((string)data[DocumentColumnName.GUID],
-						(string)data[DocumentColumnName.FILENAME],
-						(string)data[DocumentColumnName.FILEPATH],
-						(string)data[DocumentColumnName.INDENTLEVEL],
-						(string)data[DocumentColumnName.DESCRIPTION])
-				).ToList();
+					new DbDocumentVo((string)data[DocumentColumn.Guid],
+						(string)data[DocumentColumn.FileName],
+						(string)data[DocumentColumn.FilePath],
+						(string)data[DocumentColumn.IndentLevel],
+						(string)data[DocumentColumn.Description])
+				);
 			}
 			catch
 			{
 				throw new Exception("データベースが整合しません。");
 			}
-
 		}
 	}
 }

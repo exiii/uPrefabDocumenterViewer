@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Linq;
 using System.Runtime.Remoting;
@@ -11,18 +12,21 @@ namespace PrefabDocumenter.Unity
     public class PrefabDocumenterViewer : EditorWindow
     {
         private Object m_DocumentDatabaseObject;
-        private SqliteDatabase m_DocumentDatabase;
+        private DraftXmlDao m_DraftXmlConnector;
 
         private string m_NameSearchBoxText;
 
         private string m_GuidSearchBoxText;
 
-        private Dictionary<GUID, string> m_GuidAndPathPair;
+        private Dictionary<string, string> m_GuidAndPathPair;
         private int m_SearchResultSelected;
 
         private Vector2 m_SearchResultViewPos = Vector2.zero;
+        private Vector2 m_DocumentViewPos = Vector2.zero;
 
-        [MenuItem(ViewerWindowLabel.MENU_ITEM_ATTR)]
+        private IEnumerable<IDocumentVo> m_TargetDbContents;
+
+        [MenuItem(ViewerWindowLabel.MenuItemAttr)]
         private static void OpenWindow()
         {
             var window = GetWindow<PrefabDocumenterViewer>();
@@ -40,10 +44,11 @@ namespace PrefabDocumenter.Unity
                 {
                     return;
                 }
-
+                
                 try
                 {
-                    m_DocumentDatabase = new SqliteDatabase(m_DocumentDatabaseObject.name);
+                    m_DraftXmlConnector = new DraftXmlDao(AssetDatabase.GetAssetPath(m_DocumentDatabaseObject));
+                    m_TargetDbContents = m_DraftXmlConnector.GetAll();
                 }
                 catch
                 {
@@ -51,28 +56,29 @@ namespace PrefabDocumenter.Unity
                     m_DocumentDatabaseObject = null;
                     return;
                 }
+                
 
-                m_NameSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.NAME_SEARCH_BOX, m_NameSearchBoxText);
-                m_GuidSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.GUID_SEARCH_BOX, m_GuidSearchBoxText);
+                m_NameSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.NameSearchBox, m_NameSearchBoxText);
+                m_GuidSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.GuidSearchBox, m_GuidSearchBoxText);
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     m_GuidAndPathPair = AssetDatabase.FindAssets(m_NameSearchBoxText)
-                        .Select(guid => new GUID(guid))
                         .Where(guid =>
                         {
                             if (m_GuidSearchBoxText == "" || m_GuidSearchBoxText == null)
                             {
                                 return true;
                             }
-
-                            return Regex.Match(guid.ToString(), m_GuidSearchBoxText).Success;
+                            
+                            return Regex.Match(guid, m_GuidSearchBoxText).Success;
                         })
-                        .ToDictionary(guid => guid, guid => AssetDatabase.GUIDToAssetPath(guid.ToString()));
-
+                        .Distinct()
+                        .ToDictionary(guid => guid, guid => AssetDatabase.GUIDToAssetPath(guid));
+                    
+                    
                     m_SearchResultViewPos = EditorGUILayout.BeginScrollView(m_SearchResultViewPos, GUI.skin.box);
                     {
-                        // [TODO]
                         EditorGUI.BeginChangeCheck();
                         m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected, m_GuidAndPathPair.Select(pair => pair.Value + ": " + pair.Key).ToArray(), 1, "PreferencesKeysElement");
                         if (EditorGUI.EndChangeCheck())
@@ -82,9 +88,17 @@ namespace PrefabDocumenter.Unity
                     }
                     EditorGUILayout.EndScrollView();
 
-                    using (new EditorGUILayout.VerticalScope())
+                    var descriptionData = m_TargetDbContents.Where(data =>
+                        m_GuidAndPathPair.Keys.ToArray()[m_SearchResultSelected] == data.Guid);
+                    
+                    if (!descriptionData.Any())
                     {
-                            
+                        return;
+                    }
+                    
+                    using (new EditorGUILayout.VerticalScope(GUI.skin.box))
+                    {
+                        GUILayout.Label(descriptionData.First().Description);
                     }
                 }
             }

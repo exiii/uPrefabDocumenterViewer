@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace PrefabDocumenter.Unity
 {
-    public class DocumentVo
+    public class DbDocumentVo : IDocumentVo
     {
         public string Guid { get; private set; }
         public string FileName { get; private set; }
@@ -12,7 +12,7 @@ namespace PrefabDocumenter.Unity
         public string IndentLevel { get; private set; }
         public string Description { get; private set; }
 
-        public DocumentVo(string Guid, string FileName, string FilePath, string IndentLevel, string Description)
+        public DbDocumentVo(string Guid, string FileName, string FilePath, string IndentLevel, string Description)
         {
             this.Guid = Guid;
             this.FileName = FileName;
