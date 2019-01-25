@@ -40,7 +40,7 @@ namespace PrefabDocumenter.Unity
 			}
 			catch
 			{
-				throw new Exception("データベースが整合しません。");
+				throw new Exception("形式が整合しません。");
 			}
 		}
 	}

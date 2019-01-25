@@ -52,7 +52,7 @@ namespace PrefabDocumenter.Unity
                 }
                 catch
                 {
-                    Debug.LogWarning("正しい形式のデータベースを読み込んでください");
+                    Debug.LogWarning("正しい形式のファイルを読み込んでください");
                     m_DocumentDatabaseObject = null;
                     return;
                 }
