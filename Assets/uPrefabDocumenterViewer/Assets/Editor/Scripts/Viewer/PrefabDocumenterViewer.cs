@@ -23,7 +23,8 @@ namespace PrefabDocumenter.Unity
         private Dictionary<string, string> m_GuidAndPathPair;
         private int m_SearchResultSelected;
 
-        private Vector2 m_SearchResultViewPos = Vector2.zero;
+        private Vector2 m_SearchResultValueViewPos = Vector2.zero;
+        private Vector2 m_SearchResultKeyViewPos = Vector2.zero;
         private Vector2 m_DocumentViewPos = Vector2.zero;
 
         private string m_DescriptionTemp;
@@ -85,24 +86,38 @@ namespace PrefabDocumenter.Unity
                     var descriptionData = m_TargetDbContents.Where(data =>
                         m_GuidAndPathPair.Keys.ToArray()[m_SearchResultSelected] == data.Guid);
                     
-                    m_SearchResultViewPos = EditorGUILayout.BeginScrollView(m_SearchResultViewPos, GUI.skin.box);
+                    EditorGUI.BeginChangeCheck();
+
+                    using (new EditorGUILayout.HorizontalScope(GUI.skin.box))
                     {
-                        EditorGUI.BeginChangeCheck();
-                        m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected, m_GuidAndPathPair.Select(pair => pair.Value + ": " + pair.Key).ToArray(), 1, "PreferencesKeysElement");
-                        if (EditorGUI.EndChangeCheck())
+
+                        m_SearchResultValueViewPos = EditorGUILayout.BeginScrollView(m_SearchResultValueViewPos, GUI.skin.box);
                         {
-                            EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
-                            if (descriptionData.Any())
-                            {
-                                m_DescriptionTemp = descriptionData.First().Description;
-                            }
-                            else
-                            {
-                                m_DescriptionTemp = "";
-                            }
+                            m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected,
+                                m_GuidAndPathPair.Select(pair => pair.Value).ToArray(), 1, "PreferencesKeysElement");
+                        }
+                        EditorGUILayout.EndScrollView();
+                        m_SearchResultKeyViewPos = EditorGUILayout.BeginScrollView(m_SearchResultKeyViewPos, GUI.skin.box);
+                        {
+                            m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected,
+                                m_GuidAndPathPair.Select(pair => pair.Key).ToArray(), 1, "PreferencesKeysElement");
+                        }
+                        EditorGUILayout.EndScrollView();
+
+                    }
+
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
+                        if (descriptionData.Any())
+                        {
+                            m_DescriptionTemp = descriptionData.First().Description;
+                        }
+                        else
+                        {
+                            m_DescriptionTemp = "";
                         }
                     }
-                    EditorGUILayout.EndScrollView();
                     
                     using (new EditorGUILayout.VerticalScope())
                     {
