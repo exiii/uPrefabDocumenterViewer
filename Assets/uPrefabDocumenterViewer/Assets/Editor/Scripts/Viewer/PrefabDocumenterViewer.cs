@@ -18,12 +18,16 @@ namespace PrefabDocumenter.Unity
 
         private string m_GuidSearchBoxText;
 
+        private bool m_WriteMode;
+
         private Dictionary<string, string> m_GuidAndPathPair;
         private int m_SearchResultSelected;
 
         private Vector2 m_SearchResultViewPos = Vector2.zero;
         private Vector2 m_DocumentViewPos = Vector2.zero;
 
+        private string m_DescriptionTemp;
+        
         private IEnumerable<IDocumentVo> m_TargetDbContents;
 
         [MenuItem(ViewerWindowLabel.MenuItemAttr)]
@@ -61,6 +65,8 @@ namespace PrefabDocumenter.Unity
                 m_NameSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.NameSearchBox, m_NameSearchBoxText);
                 m_GuidSearchBoxText = EditorGUILayout.TextField(ViewerWindowLabel.GuidSearchBox, m_GuidSearchBoxText);
 
+                m_WriteMode = EditorGUILayout.ToggleLeft(ViewerWindowLabel.WriteModeToggle, m_WriteMode);
+                
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     m_GuidAndPathPair = AssetDatabase.FindAssets(m_NameSearchBoxText)
@@ -76,6 +82,8 @@ namespace PrefabDocumenter.Unity
                         .Distinct()
                         .ToDictionary(guid => guid, guid => AssetDatabase.GUIDToAssetPath(guid));
                     
+                    var descriptionData = m_TargetDbContents.Where(data =>
+                        m_GuidAndPathPair.Keys.ToArray()[m_SearchResultSelected] == data.Guid);
                     
                     m_SearchResultViewPos = EditorGUILayout.BeginScrollView(m_SearchResultViewPos, GUI.skin.box);
                     {
@@ -84,21 +92,39 @@ namespace PrefabDocumenter.Unity
                         if (EditorGUI.EndChangeCheck())
                         {
                             EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
+                            if (descriptionData.Any())
+                            {
+                                m_DescriptionTemp = descriptionData.First().Description;
+                            }
+                            else
+                            {
+                                m_DescriptionTemp = "";
+                            }
                         }
                     }
                     EditorGUILayout.EndScrollView();
+                    
+                    using (new EditorGUILayout.VerticalScope())
+                    {
+                        m_DocumentViewPos = EditorGUILayout.BeginScrollView(m_DocumentViewPos, GUI.skin.box);
+                        {
+                            if (m_WriteMode)
+                            {
+                                m_DescriptionTemp = EditorGUILayout.TextArea(m_DescriptionTemp,
+                                    GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+                            }
+                            else
+                            {
+                                EditorGUILayout.LabelField(m_DescriptionTemp, GUILayout.ExpandHeight(true),
+                                    GUILayout.ExpandWidth(true));
+                            }
+                        }
+                        EditorGUILayout.EndScrollView();
 
-                    var descriptionData = m_TargetDbContents.Where(data =>
-                        m_GuidAndPathPair.Keys.ToArray()[m_SearchResultSelected] == data.Guid);
-                    
-                    if (!descriptionData.Any())
-                    {
-                        return;
-                    }
-                    
-                    using (new EditorGUILayout.VerticalScope(GUI.skin.box))
-                    {
-                        GUILayout.Label(descriptionData.First().Description);
+                        if (GUILayout.Button(ViewerWindowLabel.ApplyButton))
+                        {
+                            
+                        }
                     }
                 }
             }
