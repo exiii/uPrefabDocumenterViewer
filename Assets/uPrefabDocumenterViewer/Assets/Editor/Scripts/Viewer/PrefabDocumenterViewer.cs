@@ -20,7 +20,7 @@ namespace PrefabDocumenter.Unity
 
         private bool m_WriteMode;
 
-        private Dictionary<string, string> m_GuidAndPathPair;
+        private Dictionary<string, string> m_GuidAndNamePair;
         private int m_SearchResultSelected;
 
         private Vector2 m_SearchResultValueViewPos = Vector2.zero;
@@ -44,7 +44,7 @@ namespace PrefabDocumenter.Unity
             using (new EditorGUILayout.VerticalScope())
             {
                 m_DocumentDatabaseObject = EditorGUILayout.ObjectField(m_DocumentDatabaseObject, typeof(Object), false);
-
+                
                 if (m_DocumentDatabaseObject == null)
                 {
                     return;
@@ -70,10 +70,10 @@ namespace PrefabDocumenter.Unity
                 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    m_GuidAndPathPair = AssetDatabase.FindAssets(m_NameSearchBoxText)
+                    m_GuidAndNamePair = AssetDatabase.FindAssets(m_NameSearchBoxText)
                         .Where(guid =>
                         {
-                            if (m_GuidSearchBoxText == "" || m_GuidSearchBoxText == null)
+                            if (string.IsNullOrEmpty(m_GuidSearchBoxText))
                             {
                                 return true;
                             }
@@ -81,11 +81,11 @@ namespace PrefabDocumenter.Unity
                             return Regex.Match(guid, m_GuidSearchBoxText).Success;
                         })
                         .Distinct()
-                        .ToDictionary(guid => guid, guid => AssetDatabase.GUIDToAssetPath(guid));
+                        .ToDictionary(guid => guid, guid => AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object)).name);
                     
                     var descriptionData = m_TargetDbContents.Where(data =>
-                        m_GuidAndPathPair.Keys.ToArray()[m_SearchResultSelected] == data.Guid);
-                    
+                        m_GuidAndNamePair.ElementAt(m_SearchResultSelected).Key == data.Guid);
+                                        
                     EditorGUI.BeginChangeCheck();
 
                     using (new EditorGUILayout.HorizontalScope(GUI.skin.box))
@@ -94,29 +94,21 @@ namespace PrefabDocumenter.Unity
                         m_SearchResultValueViewPos = EditorGUILayout.BeginScrollView(m_SearchResultValueViewPos, GUI.skin.box);
                         {
                             m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected,
-                                m_GuidAndPathPair.Select(pair => pair.Value).ToArray(), 1, "PreferencesKeysElement");
+                                m_GuidAndNamePair.Select(pair => pair.Value).ToArray(), 1, "PreferencesKeysElement");
                         }
                         EditorGUILayout.EndScrollView();
                         m_SearchResultKeyViewPos = EditorGUILayout.BeginScrollView(m_SearchResultKeyViewPos, GUI.skin.box);
                         {
                             m_SearchResultSelected = GUILayout.SelectionGrid(m_SearchResultSelected,
-                                m_GuidAndPathPair.Select(pair => pair.Key).ToArray(), 1, "PreferencesKeysElement");
+                                m_GuidAndNamePair.Select(pair => pair.Key).ToArray(), 1, "PreferencesKeysElement");
                         }
                         EditorGUILayout.EndScrollView();
-
                     }
 
                     if (EditorGUI.EndChangeCheck())
                     {
-                        EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
-                        if (descriptionData.Any())
-                        {
-                            m_DescriptionTemp = descriptionData.First().Description;
-                        }
-                        else
-                        {
-                            m_DescriptionTemp = "";
-                        }
+                        //EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath(m_GuidAndPathPair.ElementAt(m_SearchResultSelected).Value, typeof(Object)));
+                        m_DescriptionTemp = descriptionData.DefaultIfEmpty(new XmlDocumentVo()).First().Description;
                     }
                     
                     using (new EditorGUILayout.VerticalScope())
@@ -127,19 +119,22 @@ namespace PrefabDocumenter.Unity
                             {
                                 m_DescriptionTemp = EditorGUILayout.TextArea(m_DescriptionTemp,
                                     GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+                                
+                                if (GUILayout.Button(ViewerWindowLabel.ApplyButton))
+                                {
+                                    m_DraftXmlConnector.Update(
+                                        new XmlDocumentVo(m_GuidAndNamePair.ElementAt(m_SearchResultSelected).Key,
+                                            m_GuidAndNamePair.ElementAt(m_SearchResultSelected).Value,
+                                            m_DescriptionTemp));
+                                }
                             }
                             else
                             {
-                                EditorGUILayout.LabelField(m_DescriptionTemp, GUILayout.ExpandHeight(true),
-                                    GUILayout.ExpandWidth(true));
+                                EditorGUILayout.LabelField(m_DescriptionTemp, 
+                                    GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
                             }
                         }
                         EditorGUILayout.EndScrollView();
-
-                        if (GUILayout.Button(ViewerWindowLabel.ApplyButton))
-                        {
-                            
-                        }
                     }
                 }
             }

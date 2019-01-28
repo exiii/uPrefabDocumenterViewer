@@ -43,5 +43,10 @@ namespace PrefabDocumenter.Unity
 				throw new Exception("形式が整合しません。");
 			}
 		}
+
+		public void Update(DbDocumentVo DocumentVo)
+		{
+			
+		}
 	}
 }

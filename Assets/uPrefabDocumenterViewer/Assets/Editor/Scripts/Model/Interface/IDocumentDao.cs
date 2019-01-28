@@ -8,5 +8,7 @@ namespace PrefabDocumenter.Unity
     public interface IDocumentDao<T> where T : IDocumentVo
     {
         IEnumerable<T> GetAll();
+
+        void Update(T DocumentVo);
     }
 }

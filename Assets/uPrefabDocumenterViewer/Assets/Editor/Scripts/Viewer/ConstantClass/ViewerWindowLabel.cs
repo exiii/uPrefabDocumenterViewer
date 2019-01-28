@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace PrefabDocumenter.Unity
 {
-    public class ViewerWindowLabel
+    public static class ViewerWindowLabel
     {
         public const string MenuItemAttr = "Window/PrefabDocumenterViewer";
         public const string NameSearchBox = "FileName";
