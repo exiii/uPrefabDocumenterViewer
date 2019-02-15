@@ -24,6 +24,10 @@
 5. [PrefabDocumenter](https://github.com/exiii/PrefabDocumenter)で作成したDraftを指定する。
 ![ObjectPicker](https://i.gyazo.com/827667595a76b2054f062d58582f6fb0.png)
 
+## Development
+Unity 2018.2.20f1
+.NET4.x Equivalent
+
 ## Licence
 CC-BY-4.0, exiii Inc.
 
