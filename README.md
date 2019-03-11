@@ -4,8 +4,8 @@
 Download UnityPackage.
 
 
-2. Unityの`Scripting Runtime Version`を`.NET4.x Equivalent`にする
-Change `Scripting Runtime Version` of Unity into `.NET4.x Equivalent` .
+2. Unityの`Scripting Runtime Version`を`.NET4.x Equivalent`にする。
+Change `Scripting Runtime Version` of Unity into `.NET4.x Equivalent`.
 
 ![.NETRuntimeVersion](https://i.gyazo.com/c99fe0cbfbd57c6e9b980892f9a6fee1.png)
 
