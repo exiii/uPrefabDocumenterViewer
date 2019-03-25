@@ -15,6 +15,7 @@ namespace PrefabDocumenter.Unity
         private DraftXmlDao m_DraftXmlConnector;
 
         private string m_NameSearchBoxText;
+        private string m_NowSearchBoxText;
 
         private string m_GuidSearchBoxText;
 
@@ -70,18 +71,23 @@ namespace PrefabDocumenter.Unity
                 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    m_GuidAndNamePair = AssetDatabase.FindAssets(m_NameSearchBoxText)
-                        .Where(guid =>
-                        {
-                            if (string.IsNullOrEmpty(m_GuidSearchBoxText))
+                    if (m_NowSearchBoxText == m_NameSearchBoxText || string.IsNullOrEmpty(m_NowSearchBoxText))
+                    {
+                        m_GuidAndNamePair = AssetDatabase.FindAssets(m_NameSearchBoxText)
+                            .Where(guid =>
                             {
-                                return true;
-                            }
+                                if (string.IsNullOrEmpty(m_GuidSearchBoxText))
+                                {
+                                    return true;
+                                }
                             
-                            return Regex.Match(guid, m_GuidSearchBoxText).Success;
-                        })
-                        .Distinct()
-                        .ToDictionary(guid => guid, guid => AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object)).name);
+                                return Regex.Match(guid, m_GuidSearchBoxText).Success;
+                            })
+                            .Distinct()
+                            .ToDictionary(guid => guid, guid => AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(guid), typeof(Object)).name);
+                        
+                        m_NowSearchBoxText = m_NameSearchBoxText;
+                    }
                     
                     var descriptionData = m_TargetDbContents.Where(data =>
                         m_GuidAndNamePair.ElementAt(m_SearchResultSelected).Key == data.Guid);
